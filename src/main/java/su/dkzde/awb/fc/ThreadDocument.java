@@ -4,6 +4,7 @@ import io.micronaut.core.annotation.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 public final class ThreadDocument {
 
@@ -16,25 +17,33 @@ public final class ThreadDocument {
      */
     private final long[] index;
     private final PostDocument[] docs;
+    private final int[] replies;
 
     ThreadDocument(String board, Thread thread) {
 
         this.board = board;
         this.posts = thread.getPosts();
 
-        int replies = posts.size();
-        this.docs = new PostDocument[replies];
-        this.index = new long[replies];
+        int size = posts.size();
+        this.docs = new PostDocument[size];
+        this.index = new long[size];
+        this.replies = new int[size];
 
-        for (int j = 0; j < replies; j++) {
-            Post post = posts.get(j);
-            index[j] = post.getNumber();
-            docs[j] = new PostDocument(board, post);
+        for (int j = 0; j < size; j++) {
+            final int idx = j;
+
+            Post post = posts.get(idx);
+            PostDocument document = new PostDocument(board, post);
+
+            docs[idx] = document;
+            index[idx] = post.getNumber();
+            document.getReplies().forEach(reply -> {
+                int p = Arrays.binarySearch(index, 0, idx, reply);
+                if (p >= 0) {
+                    replies[idx]++;
+                }
+            });
         }
-    }
-
-    public PostDocument getOp() {
-        return docs[0];
     }
 
     public long getNumber() {
@@ -47,6 +56,19 @@ public final class ThreadDocument {
 
     public @Nullable String getCommentText() {
         return docs[0].getCommentText();
+    }
+
+    public long getLastPostTime() {
+        Post post = posts.get(posts.size() - 1);
+        return post.getTime();
+    }
+
+    public PostDocument getOp() {
+        return docs[0];
+    }
+
+    public Stream<PostDocument> getPosts() {
+        return Stream.of(docs);
     }
 
     public @Nullable PostDocument getPost(long number) {

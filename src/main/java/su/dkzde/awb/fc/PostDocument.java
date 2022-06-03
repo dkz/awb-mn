@@ -14,7 +14,7 @@ import org.jsoup.select.NodeVisitor;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
+import java.util.stream.LongStream;
 
 /** Wraps around json data from {@link Post} class. */
 public final class PostDocument {
@@ -35,11 +35,15 @@ public final class PostDocument {
         }
     }
 
-    public Stream<Long> getReplies() {
+    public long getNumber() {
+        return post.getNumber();
+    }
+
+    LongStream getReplies() {
         if (document == null) {
-            return Stream.empty();
+            return LongStream.empty();
         } else {
-            Stream.Builder<Long> replies = Stream.builder();
+            LongStream.Builder replies = LongStream.builder();
             Elements elements = document.select(".quotelink");
             for (Element element : elements) {
                 String link = element.attr("href");
